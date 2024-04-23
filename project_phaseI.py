@@ -21,6 +21,7 @@ print(df.info())
 nan_count = df.isnull().sum()
 print("Count of NaN values in each column:")
 print(nan_count)
+
 # %%
 
 empty_developers = df[df['Developers'].isnull()]
@@ -30,6 +31,7 @@ empty_developers_revenue = empty_developers['Revenue']
 
 print("Revenue corresponding to empty values in the 'Developers' column:")
 print(empty_developers_revenue.to_string())
+
 # %%
 df_cleaned = df.dropna()
 
@@ -57,6 +59,7 @@ print(df_cleaned.head())
 # %%
 print("\nStatistics of the cleaned dataset:")
 print(df_cleaned.describe())
+
 # %%
 df_cleaned['Age'] = df_cleaned['Age'].astype(int)
 
@@ -141,10 +144,12 @@ for i, column in enumerate(features.columns):
 # Adjust layout
 plt.tight_layout()
 plt.show()
+
 # %%
 
 # Display datatypes of each column in df_cleaned
 print(df_cleaned.dtypes)
+
 # %%
 
 # Extract unique genres from the dataset
@@ -161,8 +166,8 @@ for genre in unique_genres:
     print(genre)
 
 # %%
-
-selected_genres = ['Documentary', 'Action', 'Racing', 'Strategy', 'Adventure']
+# Line-Plot
+selected_genres = ['Indie', 'Action', 'Racing', 'Strategy', 'Adventure']
 
 # Filter the dataframe for the selected genres
 filtered_df = df_cleaned[df_cleaned['Genres'].str.contains('|'.join(selected_genres))]
@@ -181,5 +186,114 @@ plt.ylabel('Peak CCU')
 plt.title('Peak CCU for Selected Genres Over Time')
 plt.legend()
 plt.grid(True)
+plt.show()
+
+# %%
+from prettytable import PrettyTable
+
+# Create a PrettyTable object
+table = PrettyTable()
+
+# Define the table headers
+table.field_names = ["Genre", "Mean Peak CCU"]
+
+# Add data to the table for all selected genres
+for genre in selected_genres:
+    mean_peak_ccu = genre_peak_ccu.loc[genre] if genre in genre_peak_ccu.index else "N/A"
+    table.add_row([genre, mean_peak_ccu])
+
+# Print the table
+print(table)
+
+print('''- Indie: 5.68 (approximately): This indicates that, on average, indie games have around 5.68 peak concurrent users.
+- Action: 369.93 (approximately): This suggests that action games have a significantly higher average peak concurrent user count, with around 369.93 concurrent users on average.
+- Racing: 56.56 (approximately): Racing games have an average peak concurrent user count of around 56.56 users.
+- Strategy: 230.04 (approximately): Strategy games also show a relatively high average peak concurrent user count, with around 230.04 concurrent users on average.
+- Adventure: 23.37 (approximately): Adventure games have a lower average peak concurrent user count compared to other genres, with around 23.37 concurrent users on average.''')
+
+# %%
+#Stacked Bar Plot
+# Extract individual genres from the combined string format
+df_cleaned['Genre'] = df_cleaned['Genres'].str.split(',')
+
+# Create a new dataframe by exploding the 'Genre' column
+df_expanded = df_cleaned.explode('Genre')
+
+games_by_genre = df_expanded['Genre'].value_counts().head(5).index
+
+# Filter the data to include only the top 5 genres
+top_genres_df = df_expanded[df_expanded['Genre'].isin(games_by_genre)]
+
+# Group the filtered data by genre and playtime category and count the number of games in each group
+games_by_genre_playtime = top_genres_df.groupby(['Genre', 'Playtime']).size().unstack(fill_value=0)
+games_by_genre_playtime.drop(columns=['LOW'], inplace=True)
+
+# Plot a stacked bar plot
+plt.figure(figsize=(12, 8))
+games_by_genre_playtime.plot(kind='bar', stacked=True)
+plt.title('Number of Games by Genre and Playtime Category (Top 5 Genres)', **title_style)
+plt.xlabel('Genre', **label_style)
+plt.ylabel('Number of Games', **label_style)
+plt.xticks(rotation=45, ha='right', **label_style)
+plt.legend(title='Playtime Category')
+plt.tight_layout()
+plt.grid(True)
+plt.show()
+
+# %%
+# Bar Plot Group
+games_by_developers = df_cleaned['Developers'].value_counts()
+
+top_publishers = games_by_developers.nlargest(5).index
+
+# Retrieve the count of games and Peak CCU for the top 10 publishers
+games_counts = games_by_developers.loc[top_publishers]
+peak_ccu_values = df_cleaned[df_cleaned['Developers'].isin(top_publishers)].groupby('Developers')['Peak CCU'].sum()
+
+# Plot a grouped bar plot
+plt.figure(figsize=(12, 8))
+bar_width = 0.35
+index = np.arange(len(top_publishers))
+
+plt.bar(index, games_counts, bar_width, color='skyblue', label='Number of Games Developed')
+plt.bar(index + bar_width, peak_ccu_values, bar_width, color='orange', label='Peak CCU')
+
+plt.title('Top 5 Developers by Number of Games Developed and Peak CCU', **title_style)
+plt.xlabel('Developers', **label_style)
+plt.ylabel('Count / Peak CCU', **label_style)
+plt.xticks(index + bar_width / 2, top_publishers, rotation=45, ha='right', color='black')
+plt.legend()
+plt.tight_layout()
+plt.grid(True)
+plt.show()
+
+# %%
+# Count Plot
+# Plot the count plot
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df_cleaned, x='Quarter', palette='Set2')
+plt.title('Number of Games Released by Quarter', **title_style)
+plt.xlabel('Quarter', **label_style)
+plt.ylabel('Number of Games Released', **label_style)
+plt.xticks(color='black')
+plt.yticks(color='black')
+plt.tight_layout()
+plt.show()
+
+# %%
+# pie Plot
+
+year_intervals = pd.cut(df_cleaned['Year'], bins=range(2005, 2026, 3), right=False)
+
+# Count the number of games released in each interval
+games_by_year_interval = df_cleaned.groupby(year_intervals).size()
+
+# Plot the pie chart
+plt.figure(figsize=(8, 8))
+plt.pie(games_by_year_interval, labels=games_by_year_interval.index, autopct='%1.1f%%', startangle=140)
+plt.title('Proportion of Games Released by Year Interval', **title_style)
+plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+plt.tight_layout()
+plt.legend()
 plt.show()
 # %%
