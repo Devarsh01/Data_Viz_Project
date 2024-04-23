@@ -142,3 +142,44 @@ for i, column in enumerate(features.columns):
 plt.tight_layout()
 plt.show()
 # %%
+
+# Display datatypes of each column in df_cleaned
+print(df_cleaned.dtypes)
+# %%
+
+# Extract unique genres from the dataset
+unique_genres = set()
+
+# Iterate over each row and split the genres
+for genres_str in df_cleaned['Genres']:
+    genres_list = genres_str.split(',')
+    unique_genres.update(genres_list)
+
+# Display the unique genres
+print("Unique Genres:")
+for genre in unique_genres:
+    print(genre)
+
+# %%
+
+selected_genres = ['Documentary', 'Action', 'Racing', 'Strategy', 'Adventure']
+
+# Filter the dataframe for the selected genres
+filtered_df = df_cleaned[df_cleaned['Genres'].str.contains('|'.join(selected_genres))]
+
+# Group the data by genre and calculate the mean Peak CCU for each genre
+genre_peak_ccu = filtered_df.groupby('Genres')['Peak CCU'].mean().sort_values(ascending=False)
+
+# Plot the line plot for Peak CCU for the selected genres
+plt.figure(figsize=(10, 6))
+for genre in selected_genres:
+    plt.plot(filtered_df[filtered_df['Genres'].str.contains(genre)].groupby('Year')['Peak CCU'].mean(), label=genre)
+
+# Add labels and title
+plt.xlabel('Year')
+plt.ylabel('Peak CCU')
+plt.title('Peak CCU for Selected Genres Over Time')
+plt.legend()
+plt.grid(True)
+plt.show()
+# %%
