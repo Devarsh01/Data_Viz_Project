@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from scipy.stats import shapiro
+import statsmodels.api as sm
 
 #%%
 title_style = {'fontname': 'serif', 'color': 'blue', 'size': 'large'}
@@ -295,5 +296,155 @@ plt.title('Proportion of Games Released by Year Interval', **title_style)
 plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
 plt.tight_layout()
 plt.legend()
+plt.show()
+# %%
+# Dist plot
+
+plt.figure(figsize=(10, 6))
+sns.distplot(df_cleaned['Price'], kde=True, color='skyblue')
+plt.title('Distribution of Price', **title_style)
+plt.xlabel('Price', **label_style)
+plt.ylabel('Density', **label_style)
+plt.tight_layout()
+plt.show()
+# %%
+# Pair Plot
+
+selected_features = ['Peak CCU', 'Price', 'Age']
+
+# Set the style for the plot
+sns.set_style("whitegrid")
+
+# Create the pair plot
+sns.pairplot(df_cleaned[selected_features])
+plt.suptitle('Pair Plot of Selected Numerical Features', **title_style)
+plt.tight_layout()
+plt.show()
+# %%
+# histogram plot with KDE
+
+plt.figure(figsize=(10, 6))
+sns.distplot(df_cleaned['Positive'], kde=True, color='skyblue')
+plt.title('Distribution of Positive Reviews', **title_style)
+plt.xlabel('Positive Reviews', **label_style)
+plt.ylabel('Density', **label_style)
+plt.tight_layout()
+plt.show()
+
+# %%
+# QQ-Plot
+features = ['Average playtime forever', 'Revenue', 'Price', 'Negative']
+
+# Create subplots
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 10))
+
+# Flatten the axes array for easy iteration
+axes = axes.flatten()
+
+# Plot QQ plots for each feature
+for i, feature in enumerate(features):
+    # Fit a QQ plot comparing the distribution of the feature with a normal distribution
+    sm.qqplot(df_cleaned[feature], line='45', ax=axes[i])
+    axes[i].set_title(f'QQ Plot: {feature} vs. Normal Distribution', **title_style)
+    axes[i].set_xlabel('Theoretical Quantiles', **label_style)
+    axes[i].set_ylabel('Sample Quantiles', **label_style)
+
+plt.tight_layout()
+plt.show()
+# %%
+# KDE Fill
+
+custom_palette = ["#ff7f0e"]
+
+# Plot KDE plot with filled areas and custom palette
+plt.figure(figsize=(10, 6))
+sns.kdeplot(data=df_cleaned, x='Price', fill=True, palette=custom_palette)
+plt.title('Kernel Density Estimation of Price', **title_style)
+plt.xlabel('Price', **label_style)
+plt.ylabel('Density', **label_style)
+plt.grid(True)
+plt.show()
+
+# %%
+# reg Line
+
+plt.figure(figsize=(10, 6))
+sns.regplot(data=df_cleaned, x='Peak CCU', y='Revenue', scatter_kws={'alpha':0.5})
+plt.title('Regression of Revenue against Peak CCU', **title_style)
+plt.xlabel('Peak CCU', **label_style)
+plt.ylabel('Revenue', **label_style)
+plt.grid(True)
+plt.show()
+# %%
+# Multi Box Plot
+
+df_cleaned['Categories'] = df_cleaned['Categories'].str.split(',')
+
+# Explode the dataframe to create a row for each category
+df_expanded = df_cleaned.explode('Categories')
+
+# Plot the boxen plot
+plt.figure(figsize=(12, 8))
+sns.boxenplot(data=df_expanded, x='Categories', y='Price', palette='Set2')
+plt.title('Price Distribution Across Different Categories', **title_style)
+plt.xlabel('Categories', **label_style)
+plt.ylabel('Price', **label_style)
+plt.xticks(rotation=45, ha='right', color='black')
+plt.tight_layout()
+plt.grid(True)
+plt.show()
+
+# %%
+# Area Plot
+
+cumulative_positive_reviews = df_cleaned.groupby('Year')['Positive'].sum().cumsum()
+
+# Plot the area plot
+plt.figure(figsize=(12, 8))
+plt.fill_between(cumulative_positive_reviews.index, cumulative_positive_reviews, color='skyblue', alpha=0.5)
+
+# Add labels and title
+plt.title('Cumulative Positive Reviews Over Time', **title_style)
+plt.xlabel('Year', **label_style)
+plt.ylabel('Cumulative Positive Reviews', **label_style)
+plt.xticks(**label_style)
+plt.yticks(**label_style)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+# %%
+# violin Plot
+
+playtime_counts = df_cleaned['Playtime'].value_counts()
+
+# Plot a bar plot
+plt.figure(figsize=(12, 8))
+sns.violinplot(data=df_cleaned, x='Playtime', y='Average playtime forever', inner='quartile', palette='muted')
+plt.title('Violin Plots of Average Playtime by Playtime Category', **title_style)
+plt.xlabel('Playtime Category', **label_style)
+plt.ylabel('Average Playtime', **label_style)
+plt.tight_layout()
+plt.show()
+
+# %%
+# Joint KDE
+
+plt.figure(figsize=(8, 6))
+sns.jointplot(data=df_cleaned, x='Price', y='Average In-game purchase', kind='scatter', color='purple')
+plt.title('Joint Distribution of Price, Average In-game Purchase, and Revenue', **title_style)
+plt.xlabel('Price', **label_style)
+plt.ylabel('Average In-game Purchase', **label_style)
+plt.tight_layout()
+plt.show()
+# %%
+# Rug Plot Revenue
+
+plt.figure(figsize=(8, 6))
+sns.kdeplot(data=df_cleaned, x='Revenue', fill=True, color='orange', linewidth=2)
+sns.rugplot(data=df_cleaned, x='Revenue', height=0.1, color='black', alpha=0.5)
+plt.title('KDE Plot of Revenue with Rug Plots', **title_style)
+plt.xlabel('Revenue', **label_style)
+plt.ylabel('Density', **label_style)
+plt.tight_layout()
 plt.show()
 # %%
