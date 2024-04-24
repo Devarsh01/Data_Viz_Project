@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 
 # Load the dataset
-df = pd.read_csv("C:/Users/DEVARSH SHETH/Desktop/GWU/Data_Visulization/Project/Data_Viz_Project/exported_data.csv")  
+df = pd.read_csv("https://raw.githubusercontent.com/Devarsh01/Data_Viz_Project/main/exported_data.csv")  
 
 # Drop rows with missing values
 df_cleaned = df.dropna()
@@ -41,7 +41,12 @@ main_header = html.Header([
 tab1_layout = html.Div([
     html.Div([
         html.H2("Top 5 Games by Revenue", style={**title_style, 'textAlign': 'center'}),
-    ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'center'}),
+        # Download button for CSV file
+         html.Button("Download CSV", id="btn-download-csv", title="Click to download data as CSV"),
+    
+    # The dcc.Download component
+    dcc.Download(id="download-csv"),
+    ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'space-between', 'margin-bottom': '20px'}),
     dcc.Loading(
         id="loading-graph",
         type="circle",
@@ -213,6 +218,15 @@ def update_genre_revenue_bar(selected_genres, price_range):
         
         return fig, table
 
+@app.callback(
+    Output("download-csv", "data"),
+    [Input("btn-download-csv", "n_clicks")],
+    prevent_initial_call=True,
+)
+def download_csv(n_clicks):
+    # This function converts the DataFrame to a CSV string and sends it as a download
+    return dcc.send_data_frame(df_cleaned.to_csv, "my_data.csv", index=False)
+    
 # Define callback to update the bar plot based on category selection
 @app.callback(
     [Output('category-user-bar', 'figure'),
