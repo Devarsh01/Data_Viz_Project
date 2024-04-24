@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from scipy.stats import shapiro
 import statsmodels.api as sm
+from mpl_toolkits.mplot3d import Axes3D
 
 #%%
 title_style = {'fontname': 'serif', 'color': 'blue', 'size': 'large'}
@@ -446,5 +447,70 @@ plt.title('KDE Plot of Revenue with Rug Plots', **title_style)
 plt.xlabel('Revenue', **label_style)
 plt.ylabel('Density', **label_style)
 plt.tight_layout()
+plt.show()
+# %%
+# Cluster Map
+
+selected_features = df_cleaned[['Peak CCU', 'Average In-game']]
+
+# Plot a cluster map
+plt.figure(figsize=(10, 8))
+sns.clustermap(selected_features, cmap='viridis', figsize=(12, 10))
+plt.title('Cluster Map of Game Features')
+plt.show()
+
+# %%
+# Hexbin Plot
+
+plt.figure(figsize=(10, 8))
+plt.hexbin(df_cleaned['Peak CCU'], df_cleaned['Average In-game purchase'], gridsize=50, cmap='YlGnBu', edgecolors='none')
+plt.colorbar(label='Count in Bin')
+plt.xlabel('Peak CCU', **label_style)
+plt.ylabel('Average In-game Purchase', **label_style)
+plt.title('Hexbin Plot of Peak CCU versus Average In-game Purchase', **title_style)
+plt.show()
+
+# %%
+# Strip Plot
+
+plt.figure(figsize=(10, 8))
+sns.stripplot(x='Playtime', y='Price', data=df_cleaned, jitter=True)
+plt.xlabel('Playtime Category', **label_style)
+plt.ylabel('Price', **label_style)
+plt.title('Distribution of Price within each Playtime Category', **title_style)
+plt.show()
+
+# %%
+# Swarm Plot
+
+plt.figure(figsize=(10, 8))
+sns.swarmplot(x='Playtime', y='Price', data=df_cleaned)
+plt.xlabel('Playtime Category', **label_style)
+plt.ylabel('Price', **label_style)
+plt.title('Distribution of Price within each Playtime Category', **title_style)
+plt.show()
+
+
+# %%
+# 3-D Plot
+
+# Create a 3D scatter plot
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(df_cleaned['Average In-game purchase'], df_cleaned['Price'], df_cleaned['Revenue'], c='blue', marker='o')
+ax.set_xlabel('Average In-game Purchase', **label_style)
+ax.set_ylabel('Price', **label_style)
+ax.set_zlabel('Revenue', **label_style, labelpad=0)  # Increase the labelpad to move the label further from the axis
+ax.set_title('3D Scatter Plot of Price, Average In-game Purchase, and Revenue', **title_style)
+
+# Create a contour plot
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_trisurf(df_cleaned['Average In-game purchase'], df_cleaned['Price'], df_cleaned['Revenue'], cmap='viridis', edgecolor='none')
+ax.set_xlabel('Average In-game Purchase', **label_style)
+ax.set_ylabel('Price', **label_style)
+ax.set_zlabel('Revenue', **label_style, labelpad=0)  # Increase the labelpad to move the label further from the axis
+ax.set_title('Contour Plot of Price, Average In-game Purchase, and Revenue', **title_style)
+
 plt.show()
 # %%
