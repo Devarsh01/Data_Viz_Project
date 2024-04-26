@@ -5,7 +5,8 @@ import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import numpy as np
-from scipy.stats import shapiro
+from scipy.stats import shapiro, normaltest, anderson
+from scipy.stats import normaltest
 import statsmodels.api as sm
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -14,7 +15,7 @@ title_style = {'fontname': 'serif', 'color': 'blue', 'size': 'large'}
 label_style = {'fontname': 'serif', 'color': 'darkred'}
 
 #%%
-df = pd.read_csv("C:/Users/DEVARSH SHETH/Desktop/GWU/Data_Visulization/Project/Data_Viz_Project/exported_data.csv")  # Replace "your_dataset.csv" with the actual file path
+df = pd.read_csv("https://raw.githubusercontent.com/Devarsh01/Data_Viz_Project/main/exported_data.csv")
 # Display non-null count and dtype of each column in the uncleaned dataset
 print("Non-null count and dtype of each column in the uncleaned dataset:")
 print(df.info())
@@ -65,7 +66,7 @@ print(df_cleaned.describe())
 # %%
 df_cleaned['Age'] = df_cleaned['Age'].astype(int)
 
-numerical_columns = df_cleaned.select_dtypes(include=['float64', 'int64']).columns
+numerical_columns = df_cleaned.select_dtypes(include=['float64', 'int64', 'int32']).columns
 
 # Create box plots for each numerical column to visualize outliers
 plt.figure(figsize=(16, 10))
@@ -103,20 +104,50 @@ print("Singular Values:", singular_values)
 condition_number = np.linalg.cond(scaled_features)
 print("Condition Number:", condition_number)
 
+plt.figure(figsize=(8, 5))
+
+# Creating the bar plot for individual explained variance
+bar = plt.bar(range(1, len(explained_variance) + 1), explained_variance, alpha=0.5, align='center',
+              label='Individual explained variance', color='blue')
+
+# Creating the line plot for cumulative explained variance
+line = plt.plot(range(1, len(cumulative_variance) + 1), cumulative_variance, marker='o', color='red',
+                label='Cumulative explained variance')
+
+plt.title('Scree Plot of Principal Components')
+plt.xlabel('Principal Components')
+plt.ylabel('Explained Variance Ratio')
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+plt.tight_layout()
+plt.show()
+
 # %%
 # Perform Shapiro-Wilk test for normality
-statistic, p_value = shapiro(features)
+shapiro_stat, shapiro_p_value = shapiro(features)
 
-# Print the test statistic and p-value
-print("Shapiro-Wilk Test Statistic:", statistic)
-print("P-value:", p_value)
+# Print the test statistic and p-value for Shapiro-Wilk Test
+print("Shapiro-Wilk Test Statistic:", shapiro_stat)
+print("P-value:", shapiro_p_value)
 
-# Interpret the results
+for column in features.columns:
+    stat, p = normaltest(features[column])
+    print(f"Feature: {column}")
+    print('D\'Agostino\'s K-squared test Statistic:', stat)
+    print('P-value:', p)
+    alpha = 0.05  # significance level
+    if p > alpha:
+        print(f"The data in {column} looks Gaussian (fail to reject H0).")
+    else:
+        print(f"The data in {column} does not look Gaussian (reject H0).")
+    print("\n")
+
+# Interpret the results for Shapiro-Wilk Test
 alpha = 0.05  # significance level
-if p_value > alpha:
-    print("The data looks Gaussian (fail to reject H0)")
+if shapiro_p_value > alpha:
+    print("\nThe data looks Gaussian according to Shapiro-Wilk Test (fail to reject H0)")
 else:
-    print("The data does not look Gaussian (reject H0)")
+    print("\nThe data does not look Gaussian according to Shapiro-Wilk Test (reject H0)")
 
 # %%
 
@@ -183,9 +214,9 @@ for genre in selected_genres:
     plt.plot(filtered_df[filtered_df['Genres'].str.contains(genre)].groupby('Year')['Peak CCU'].mean(), label=genre)
 
 # Add labels and title
-plt.xlabel('Year')
-plt.ylabel('Peak CCU')
-plt.title('Peak CCU for Selected Genres Over Time')
+plt.xlabel('Year', **label_style)
+plt.ylabel('Peak CCU', **label_style)
+plt.title('Peak CCU for Selected Genres Over Time', **title_style)
 plt.legend()
 plt.grid(True)
 plt.show()
@@ -451,11 +482,12 @@ plt.show()
 # %%
 # Cluster Map
 
-selected_features = df_cleaned[['Peak CCU', 'Average In-game']]
+selected_features = df_cleaned[['Peak CCU','Price', 'Positive', 'Negative', 'Revenue']]
 
+selected_features_sampled = selected_features.sample(n=1000, random_state=1)
 # Plot a cluster map
 plt.figure(figsize=(10, 8))
-sns.clustermap(selected_features, cmap='viridis', figsize=(12, 10))
+sns.clustermap(selected_features_sampled, cmap='viridis', figsize=(12, 10))
 plt.title('Cluster Map of Game Features')
 plt.show()
 
@@ -483,8 +515,10 @@ plt.show()
 # %%
 # Swarm Plot
 
+df_sampled = df_cleaned.sample(n=1000, random_state=1)
+
 plt.figure(figsize=(10, 8))
-sns.swarmplot(x='Playtime', y='Price', data=df_cleaned)
+sns.swarmplot(x='Playtime', y='Price', data=df_sampled)
 plt.xlabel('Playtime Category', **label_style)
 plt.ylabel('Price', **label_style)
 plt.title('Distribution of Price within each Playtime Category', **title_style)
@@ -495,22 +529,24 @@ plt.show()
 # 3-D Plot
 
 # Create a 3D scatter plot
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(df_cleaned['Average In-game purchase'], df_cleaned['Price'], df_cleaned['Revenue'], c='blue', marker='o')
-ax.set_xlabel('Average In-game Purchase', **label_style)
-ax.set_ylabel('Price', **label_style)
-ax.set_zlabel('Revenue', **label_style, labelpad=0)  # Increase the labelpad to move the label further from the axis
-ax.set_title('3D Scatter Plot of Price, Average In-game Purchase, and Revenue', **title_style)
+fig = plt.figure(figsize=(20, 10))
+
+ax1 = fig.add_subplot(121, projection='3d')
+ax1.scatter(df_cleaned['Average In-game purchase'], df_cleaned['Price'], df_cleaned['Revenue'], c='blue', marker='o')
+ax1.set_xlabel('Average In-game Purchase', **label_style)
+ax1.set_ylabel('Price', **label_style)
+ax1.set_zlabel('Revenue', **label_style)
+ax1.set_title('3D Scatter Plot of Price, Average In-game Purchase, and Revenue', **title_style)
 
 # Create a contour plot
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_trisurf(df_cleaned['Average In-game purchase'], df_cleaned['Price'], df_cleaned['Revenue'], cmap='viridis', edgecolor='none')
-ax.set_xlabel('Average In-game Purchase', **label_style)
-ax.set_ylabel('Price', **label_style)
-ax.set_zlabel('Revenue', **label_style, labelpad=0)  # Increase the labelpad to move the label further from the axis
-ax.set_title('Contour Plot of Price, Average In-game Purchase, and Revenue', **title_style)
+ax2 = fig.add_subplot(122, projection='3d')
+# For contour plots, we typically need grid data. For demonstration, let's use a simple trisurf plot which doesn't require grid data.
+ax2.plot_trisurf(df_cleaned['Average In-game purchase'], df_cleaned['Price'], df_cleaned['Revenue'], cmap='viridis', edgecolor='none')
+ax2.set_xlabel('Average In-game Purchase', **label_style)
+ax2.set_ylabel('Price', **label_style)
+ax2.set_zlabel('Revenue', **label_style)
+ax2.set_title('Contour Plot of Price, Average In-game Purchase, and Revenue', **title_style)
 
+plt.tight_layout()
 plt.show()
 # %%
